@@ -1,0 +1,47 @@
+package com.tcs.service;
+
+import com.tcs.model.User;
+import com.tcs.repository.UserRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class UserService {
+
+    private final UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    // ✅ CREATE USER (Admin / Signup)
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
+
+ 
+    public Optional<User> login(String username, String password) {
+        return userRepository.findByUsernameAndPassword(username, password);
+    }
+
+    // ✅ FIND USER BY ID
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);
+    }
+
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
+    // ✅ ADMIN: VIEW ALL USERS
+    public List<User> findAll() {
+        return userRepository.findAll();
+    }
+
+    // ✅ ADMIN: DELETE USER BY USERNAME
+    public void deleteByUsername(String username) {
+        userRepository.deleteByUsername(username);
+    }
+}

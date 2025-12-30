@@ -1,0 +1,27 @@
+package com.tcs.service;
+
+import com.tcs.model.Account;
+import com.tcs.repository.AccountRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class AccountService {
+
+    private final AccountRepository accountRepository;
+
+    public AccountService(AccountRepository accountRepository) {
+        this.accountRepository = accountRepository;
+    }
+
+    // ✅ User Story 1: Fetch accounts
+    public List<Account> getAccountsByUser(Long userId) {
+        return accountRepository.findByUserId(userId);
+    }
+
+    // ✅ REQUIRED: Create account (data setup / admin)
+    public Account saveAccount(Account account) {
+        return accountRepository.save(account);
+    }
+}

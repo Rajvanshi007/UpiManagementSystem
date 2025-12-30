@@ -1,0 +1,9 @@
+package com.tcs.dto;
+
+
+public class TransferRequest {
+    private Long fromAccountId;
+    private String toAccountType;
+    private String toUsername;
+    private double amount;
+}

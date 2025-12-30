@@ -1,0 +1,56 @@
+package com.tcs.controller;
+
+import com.tcs.model.Account;
+import com.tcs.model.User;
+import com.tcs.service.AccountService;
+import com.tcs.service.UserService;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/users")
+@CrossOrigin(origins = "http://localhost:4200")
+public class UserController {
+
+    private final UserService userService;
+    private final AccountService accountService;
+
+    public UserController(UserService userService, AccountService accountService) {
+        this.userService = userService;
+        this.accountService = accountService;
+    }
+
+    // ✅ SIGNUP (user + auto accounts)
+    @PostMapping
+    public User createUser(@RequestBody User user) {
+
+        User savedUser = userService.saveUser(user);
+
+        Account savings = new Account();
+        savings.setType("SAVINGS");
+        savings.setBalance(0);
+        savings.setUser(savedUser);
+        accountService.saveAccount(savings);
+
+        Account checking = new Account();
+        checking.setType("CHECKING");
+        checking.setBalance(0);
+        checking.setUser(savedUser);
+        accountService.saveAccount(checking);
+
+        return savedUser;
+    }
+
+    // ✅ GET USER
+    @GetMapping("/{id}")
+    public User getUser(@PathVariable Long id) {
+        return userService.findById(id).orElse(null);
+    }
+
+    // ✅ LOGIN
+    @PostMapping("/login")
+    public User login(@RequestBody User user) {
+        return userService
+                .login(user.getUsername(), user.getPassword())
+                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+    }
+}

@@ -1,0 +1,9 @@
+package com.tcs.model;
+
+public class AddMoneyRequest {
+    private Long accountId;
+    private double amount;
+    private CardDetails card;
+
+    // getters & setters
+}

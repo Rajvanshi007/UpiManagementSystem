@@ -1,0 +1,24 @@
+package com.tcs.controller;
+
+
+
+import com.tcs.model.Account;
+import com.tcs.service.AccountService;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@CrossOrigin(origins = "http://localhost:4200")
+@RequestMapping("/api/accounts")
+public class AccountController {
+		@Autowired
+    	AccountService accountService;
+
+    @GetMapping("/user/{userId}")
+    public List<Account> getAccounts(@PathVariable Long userId) {
+        return accountService.getAccountsByUserId(userId);
+    }
+}

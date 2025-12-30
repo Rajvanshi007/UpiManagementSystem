@@ -1,0 +1,81 @@
+package com.tcs.controller;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.web.bind.annotation.*;
+
+import com.tcs.model.Account;
+import com.tcs.model.AccountNumberGenerator;
+import com.tcs.model.User;
+import com.tcs.service.AccountService;
+import com.tcs.service.UserService;
+import com.tcs.util.JwtUtil;
+
+@RestController
+@RequestMapping("/api/users")
+@CrossOrigin(origins = "http://localhost:4200")
+public class UserController {
+
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
+
+    public UserController(UserService userService, JwtUtil jwtUtil) {
+        this.userService = userService;
+        this.jwtUtil = jwtUtil;
+    }
+
+    // USER LOGIN
+    @PostMapping("/login")
+    public Map<String, Object> login(@RequestBody User user) {
+
+        User loggedUser = userService
+            .login(user.getUsername(), user.getPassword())
+            .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+
+        String token = jwtUtil.generateToken(loggedUser.getUsername(), "USER");
+
+        return Map.of("token", token, "user", loggedUser);
+    }
+
+    // ADMIN LOGIN
+    @PostMapping("/admin/login")
+    public Map<String, String> adminLogin(@RequestBody Map<String,String> body) {
+
+        if ("admin".equals(body.get("username"))
+            && "admin123".equals(body.get("password"))) {
+
+            String token = jwtUtil.generateToken("admin", "ADMIN");
+            return Map.of("token", token);
+        }
+
+        throw new RuntimeException("Invalid admin credentials");
+    }
+
+    // 🔥 FREEZE USER
+    @PutMapping("/{id}/freeze")
+    public void freeze(@PathVariable Long id) {
+        User user = userService.findById(id)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setFrozen(true);
+        userService.save(user);
+    }
+
+    // 🔥 UNFREEZE USER
+    @PutMapping("/{id}/unfreeze")
+    public void unfreeze(@PathVariable Long id) {
+        User user = userService.findById(id)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setFrozen(false);
+        userService.save(user);
+    }
+
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable Long id) {
+        userService.deleteById(id);
+    }
+}

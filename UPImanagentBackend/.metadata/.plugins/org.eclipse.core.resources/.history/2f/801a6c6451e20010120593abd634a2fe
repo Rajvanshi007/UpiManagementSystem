@@ -1,0 +1,83 @@
+package com.tcs.config;
+
+import java.io.IOException;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.tcs.model.User;
+import com.tcs.service.UserService;
+import com.tcs.util.JwtUtil;
+
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+@Component
+public class JwtFilter extends OncePerRequestFilter {
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private UserService userService;
+
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain chain
+    ) throws ServletException, IOException {
+
+        String auth = request.getHeader("Authorization");
+
+        if (auth != null && auth.startsWith("Bearer ")) {
+
+            String token = auth.substring(7);
+            Claims claims = jwtUtil.extractClaims(token);
+
+            String username = claims.getSubject();
+            String role = claims.get("role", String.class);
+
+            // ✅ ADMIN FLOW
+            if ("ADMIN".equals(role)) {
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                "admin",
+                                null,
+                                List.of(new SimpleGrantedAuthority("ADMIN"))
+                        );
+
+                SecurityContextHolder.getContext()
+                        .setAuthentication(authentication);
+            }
+
+            // ✅ USER FLOW
+            else {
+                User user = userService.findByUsername(username).orElse(null);
+
+                if (user != null) {
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    user,
+                                    null,
+                                    List.of(new SimpleGrantedAuthority("USER"))
+                            );
+
+                    SecurityContextHolder.getContext()
+                            .setAuthentication(authentication);
+                }
+            }
+        }
+
+        chain.doFilter(request, response);
+    }
+}
+

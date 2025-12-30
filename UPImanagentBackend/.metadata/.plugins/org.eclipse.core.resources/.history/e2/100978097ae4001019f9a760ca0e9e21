@@ -1,0 +1,38 @@
+package com.tcs.controller;
+
+import java.util.Map;
+
+import org.springframework.web.bind.annotation.*;
+
+import com.tcs.service.OtpService;
+
+@RestController
+@RequestMapping("/api/otp")
+public class OtpController {
+
+    private final OtpService otpService;
+
+    public OtpController(OtpService otpService) {
+        this.otpService = otpService;
+    }
+
+    @PostMapping("/generate")
+    public void generate(@RequestBody Map<String, String> body) {
+        otpService.generateOtp(body.get("username"));
+    }
+
+    @PostMapping("/verify")
+    public boolean verify(@RequestBody Map<String, String> body) {
+        return otpService.verifyOtp(
+            body.get("username"),
+            body.get("otp")
+        );
+    }
+}
+
+
+
+
+
+
+

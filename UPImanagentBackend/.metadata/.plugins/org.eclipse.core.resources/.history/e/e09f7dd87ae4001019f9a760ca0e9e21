@@ -1,0 +1,43 @@
+package com.tcs.controller;
+
+import com.tcs.dto.TransferRequest;
+import com.tcs.service.AccountService;
+import com.tcs.service.OtpService;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/otp")
+public class OtpController {
+
+    private final OtpService otpService;
+    private final AccountService accountService;
+
+    public OtpController(OtpService otpService,AccountService accountService) {
+        this.otpService = otpService;
+        this.accountService=accountService;
+    }
+
+    @PostMapping("/generate")
+    public void generate(@RequestBody Map<String, String> body) {
+        otpService.generateOtp(body.get("username"));
+    }
+}
+
+
+
+
+@PostMapping("/transfer")
+public void transfer(@RequestBody TransferRequest req) {
+
+    if (!otpService.validateOtp(req.getFromusername(), req.getOtp())) {
+        throw new RuntimeException("Invalid or expired OTP");
+    }
+
+    accountService.transfer(
+        req.getFromAccountId(),
+        req.getToUsername(),
+        req.getAmount()
+    );
+}

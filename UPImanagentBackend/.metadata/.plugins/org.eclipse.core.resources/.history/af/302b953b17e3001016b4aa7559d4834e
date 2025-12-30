@@ -1,0 +1,84 @@
+package com.tcs.controller;
+
+import java.util.List;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+@Configuration
+public class package com.tcs.controller;
+
+import java.util.List;
+
+import org.springframework.web.bind.annotation.*;
+
+import com.tcs.model.User;
+import com.tcs.service.UserService;
+
+@RestController
+@RequestMapping("/api/users")
+@CrossOrigin(origins = "http://localhost:4200")
+public class UserController {
+
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    // ✅ USER LOGIN
+    @PostMapping("/login")
+    public User login(@RequestBody User user) {
+
+        return userService
+                .login(user.getUsername(), user.getPassword())
+                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+    }
+
+    // ✅ SIGNUP
+    @PostMapping
+    public User signup(@RequestBody User user) {
+        return userService.saveUser(user);
+    }
+
+    // ✅ GET ALL USERS (ADMIN)
+    @GetMapping
+    public List<User> getAllUsers() {
+        return userService.findAll();
+    }
+}
+ {
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
+        http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().permitAll()   // 🔥 SAB KUCH ALLOW
+            );
+
+        return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:4200"));
+        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+
+        return source;
+    }
+}

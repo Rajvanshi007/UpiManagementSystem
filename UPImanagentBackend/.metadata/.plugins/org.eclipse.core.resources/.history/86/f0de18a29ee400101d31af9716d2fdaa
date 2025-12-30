@@ -1,0 +1,42 @@
+package com.tcs.dto;
+
+public class TransferRequest {
+
+    private Long fromAccountNumber;
+    private double amount;
+    private String otp;
+    private String toAccountNumber;
+
+    public String getToAccountNumber() {
+		return toAccountNumber;
+	}
+
+	public void setToAccountNumber(String toAccountNumber) {
+		this.toAccountNumber = toAccountNumber;
+	}
+
+	public Long getfromAccountNumber() {
+        return fromAccountNumber;
+    }
+
+    public void setfromAccountNumber(Long fromAccountNumber) {
+        this.fromAccountNumber = fromAccountNumber;
+    }
+
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
+    }
+
+    public String getOtp() {
+        return otp;
+    }
+
+    public void setOtp(String otp) {
+        this.otp = otp;
+    }
+}

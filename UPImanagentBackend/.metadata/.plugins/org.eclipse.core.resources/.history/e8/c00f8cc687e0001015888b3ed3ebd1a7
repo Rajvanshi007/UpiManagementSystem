@@ -1,0 +1,31 @@
+package com.tcs.controller;
+
+
+
+
+import com.tcs.model.User;
+import com.tcs.service.UserService;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+	@Autowired
+	UserService userService;
+
+    @GetMapping("/{id}")
+    public User getUser(@PathVariable Long id) {
+        return userService.findById(id).orElse(null);
+    }
+
+    @PutMapping("/{id}")
+    public User updateUser(@PathVariable Long id, @RequestBody User user) {
+        User existing = userService.findById(id).orElseThrow();
+        existing.setEmail(user.getEmail());
+        existing.setPhone(user.getPhone());
+        if (user.getPassword() != null) existing.setPassword(user.getPassword());
+        return userService.saveUser(existing);
+    }
+}

@@ -1,0 +1,81 @@
+package com.tcs.controller;
+
+import com.tcs.dto.TransferRequest;
+import com.tcs.model.Account;
+import com.tcs.model.Transaction;
+import com.tcs.model.User;
+import com.tcs.service.AccountService;
+import com.tcs.service.OtpService;
+import com.tcs.service.TransactionService;
+import com.tcs.service.UserService;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/otp")
+public class OtpController {
+
+    private final OtpService otpService;
+    private final AccountService accountService;
+    private final TransactionService transactionService;
+    private final UserService userService;
+
+    public OtpController(
+            OtpService otpService,
+            AccountService accountService,
+            TransactionService transactionService,
+            UserService userService
+    ) {
+        this.otpService = otpService;
+        this.accountService = accountService;
+        this.transactionService = transactionService;
+        this.userService = userService;
+    }
+
+    // 🔐 GENERATE OTP
+    @PostMapping("/generate")
+    public void generate(@RequestBody Map<String, String> body) {
+        otpService.generateOtp(body.get("username"));
+    }
+
+    // 🔁 TRANSFER WITH OTP
+    @PostMapping("/transfer")
+    public void transfer(@RequestBody TransferRequest req) {
+
+        // OTP VALIDATION
+        if (!otpService.validateOtp(req.getFromUsername(), req.getOtp())) {
+            throw new RuntimeException("Invalid or expired OTP");
+        }
+
+        Account from = accountService.getAccountById(req.getFromAccountId());
+
+        User receiver = userService.findByUsername(req.getToUsername())
+                .orElseThrow(() -> new RuntimeException("Receiver not found"));
+
+        Account to = accountService.getOrCreateSavingsAccount(receiver);
+
+        if (req.getAmount() <= 0)
+            throw new RuntimeException("Invalid amount");
+
+        if (from.getBalance() < req.getAmount())
+            throw new RuntimeException("Insufficient balance");
+
+        // DEBIT
+        from.setBalance(from.getBalance() - req.getAmount());
+        accountService.saveAccount(from);
+
+        // CREDIT
+        to.setBalance(to.getBalance() + req.getAmount());
+        accountService.saveAccount(to);
+
+        // TRANSACTIONS
+        transactionService.save(
+                new Transaction("DEBIT", req.getAmount(), from)
+        );
+        transactionService.save(
+                new Transaction("CREDIT", req.getAmount(), to)
+        );
+    }
+}
+

@@ -1,0 +1,56 @@
+package com.tcs.controller;
+
+import com.tcs.model.Account;
+import com.tcs.model.Transaction;
+import com.tcs.service.AccountService;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/accounts")
+@CrossOrigin(origins = "http://localhost:4200")
+public class AccountController {
+
+    private final AccountService accountService;
+
+    public AccountController(AccountService accountService) {
+        this.accountService = accountService;
+    }
+
+    // ✅ User Story 1: View accounts
+    @GetMapping("/user/{userId}")
+    public List<Account> getAccounts(@PathVariable Long userId) {
+        return accountService.getAccountsByUser(userId);
+    }
+
+    // ✅ REQUIRED: Create account (for data setup)
+    @PostMapping
+    public Account createAccount(@RequestBody Account account) {
+        return accountService.saveAccount(account);
+    }
+    @PostMapping("/add-money")
+    public Account addMoney(@RequestBody AddMoneyRequest req) {
+
+        Account account = accountService.getAccount(req.getAccountId());
+
+        if (req.getAmount() <= 0)
+            throw new RuntimeException("Invalid amount");
+
+        // update balance
+        account.setBalance(account.getBalance() + req.getAmount());
+        accountService.save(account);
+
+        // save transaction
+        Transaction txn = new Transaction();
+        txn.setType("CREDIT");
+        txn.setAmount(req.getAmount());
+        txn.setDate(LocalDateTime.now());
+        txn.setAccount(account);
+        transactionService.save(txn);
+
+        return account;
+    }
+
+}

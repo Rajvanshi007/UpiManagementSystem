@@ -1,0 +1,88 @@
+package com.tcs.controller;
+
+import com.tcs.dto.TransferRequest;
+import com.tcs.model.Account;
+import com.tcs.model.Transaction;
+import com.tcs.model.User;
+import com.tcs.repository.AccountRepository;
+import com.tcs.service.AccountService;
+import com.tcs.service.OtpService;
+import com.tcs.service.TransactionService;
+import com.tcs.service.UserService;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/otp")
+public class OtpController {
+
+    private final OtpService otpService;
+    private final AccountService accountService;
+    private final TransactionService transactionService;
+    private final UserService userService;
+    private final AccountRepository accountRepository;
+
+    public OtpController(
+            OtpService otpService,
+            AccountService accountService,
+            TransactionService transactionService,
+            UserService userService,
+            AccountRepository accountRepository
+    ) {
+        this.otpService = otpService;
+        this.accountService = accountService;
+        this.transactionService = transactionService;
+        this.userService = userService;
+        this.accountRepository=accountRepository;
+    }
+
+    // 🔐 GENERATE OTP
+   
+
+
+    @PostMapping("/transfer")
+    public ResponseEntity<?> transfer(@RequestBody TransferRequest req) {
+
+        // ✅ OTP validation using ACCOUNT NUMBER
+        if (!otpService.validateOtp(
+                req.getfromAccountNumber(),   // 🔥 YAHI LINE IMPORTANT
+                req.getOtp()
+        )) {
+            return ResponseEntity.badRequest().body("Invalid OTP");
+        }
+
+        Account from = accountRepository.findByAccountNumber(
+                req.getfromAccountNumber()
+        ).orElseThrow(() -> new RuntimeException("Invalid sender account"));
+
+        Account to = accountRepository.findByAccountNumber(
+                req.getToAccountNumber()
+        ).orElseThrow(() -> new RuntimeException("Invalid receiver account"));
+
+        if (from.getBalance() < req.getAmount()) {
+            return ResponseEntity.badRequest().body("Insufficient balance");
+        }
+
+        from.setBalance(from.getBalance() - req.getAmount());
+        to.setBalance(to.getBalance() + req.getAmount());
+
+        accountRepository.save(from);
+        accountRepository.save(to);
+
+        return ResponseEntity.ok("Transfer successful");
+    }
+
+
+
+
+
+
+
+
+
+}
+

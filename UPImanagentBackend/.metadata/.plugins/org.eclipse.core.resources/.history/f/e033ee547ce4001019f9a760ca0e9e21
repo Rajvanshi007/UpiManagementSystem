@@ -1,0 +1,27 @@
+package com.tcs.service;
+
+import com.tcs.model.Transaction;
+import com.tcs.repository.TransactionRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class TransactionService {
+
+    private final TransactionRepository repo;
+
+    public TransactionService(TransactionRepository repo) {
+        this.repo = repo;
+    }
+
+    // ✅ Save transaction (credit / debit)
+    public Transaction save(Transaction txn) {
+        return repo.save(txn);
+    }
+
+    // ✅ Get transaction history for account
+    public List<Transaction> getTransactions(Long accountId) {
+        return repo.findByAccountIdOrderByDateDesc(accountId);
+    }
+}

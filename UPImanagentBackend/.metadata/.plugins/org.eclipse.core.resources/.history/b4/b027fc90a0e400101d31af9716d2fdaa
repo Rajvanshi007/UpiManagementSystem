@@ -1,0 +1,77 @@
+package com.tcs.controller;
+
+import com.tcs.dto.TransferRequest;
+import com.tcs.model.Account;
+import com.tcs.model.Transaction;
+import com.tcs.model.User;
+import com.tcs.repository.AccountRepository;
+import com.tcs.service.AccountService;
+import com.tcs.service.OtpService;
+import com.tcs.service.TransactionService;
+import com.tcs.service.UserService;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/otp")
+public class OtpController {
+
+    private final OtpService otpService;
+    private final AccountService accountService;
+    private final TransactionService transactionService;
+    private final UserService userService;
+    private final AccountRepository accountRepository;
+
+    public OtpController(
+            OtpService otpService,
+            AccountService accountService,
+            TransactionService transactionService,
+            UserService userService,
+            AccountRepository accountRepository
+    ) {
+        this.otpService = otpService;
+        this.accountService = accountService;
+        this.transactionService = transactionService;
+        this.userService = userService;
+        this.accountRepository=accountRepository;
+    }
+
+    // 🔐 GENERATE OTP
+   
+
+    @PostMapping("/generate")
+    public ResponseEntity<Map<String, String>> generateOtp(
+            @RequestBody Map<String, String> body) {
+
+        String accountNumber = body.get("accountNumber");
+
+        if (accountNumber == null || accountNumber.isBlank()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Account number is required"));
+        }
+
+        otpService.generateOtp(accountNumber);
+
+        return ResponseEntity.ok(
+            Map.of("message", "OTP generated successfully")
+        );
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+

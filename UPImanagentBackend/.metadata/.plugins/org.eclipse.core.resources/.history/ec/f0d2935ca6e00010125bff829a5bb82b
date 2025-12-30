@@ -1,0 +1,7 @@
+package com.tcs.repository;
+
+public interface TransactionRepositoryextends JpaRepository<Transaction, Long> {
+
+List<Transaction> findByAccountIdOrderByDateDesc(Long accountId);
+}
+

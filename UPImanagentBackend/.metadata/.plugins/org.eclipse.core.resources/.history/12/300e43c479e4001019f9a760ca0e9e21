@@ -1,0 +1,49 @@
+
+package com.tcs.service;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+
+import org.springframework.stereotype.Service;
+
+import com.tcs.model.OtpData;
+
+@Service
+public class OtpService {
+
+    private final Map<String, OtpData> otpStore = new HashMap<>();
+
+    // Generate OTP
+    public String generateOtp(String username) {
+        String otp = String.valueOf(100000 + new Random().nextInt(900000));
+
+        otpStore.put(
+            username,
+            new OtpData(otp, LocalDateTime.now().plusMinutes(2))
+        );
+
+        // 🔥 SMS / Email simulation
+        System.out.println("OTP for " + username + " : " + otp);
+
+        return otp;
+    }
+
+    // Verify OTP
+    public boolean verifyOtp(String username, String otp) {
+        OtpData data = otpStore.get(username);
+
+        if (data == null) return false;
+        if (LocalDateTime.now().isAfter(data.getExpiry())) return false;
+
+        boolean valid = data.getOtp().equals(otp);
+
+        if (valid) otpStore.remove(username);
+
+        return valid;
+    }
+}
+
+
+

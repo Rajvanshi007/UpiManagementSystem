@@ -1,0 +1,65 @@
+package com.tcs.service;
+
+import com.tcs.model.Account;
+import com.tcs.model.Transaction;
+import com.tcs.repository.TransactionRepository;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+public class TransactionService {
+
+    private final TransactionRepository repo;
+
+    public TransactionService(TransactionRepository repo) {
+        this.repo = repo;
+    }
+
+    // 🔥 CREDIT TRANSACTION
+    public Transaction credit(Account account, double amount) {
+
+        if (account == null)
+            throw new RuntimeException("Account cannot be null");
+
+        if (amount <= 0)
+            throw new RuntimeException("Invalid credit amount");
+
+        Transaction txn = new Transaction();
+        txn.setType("CREDIT");
+        txn.setAmount(amount);
+        txn.setDate(LocalDateTime.now());
+        txn.setAccount(account);
+
+        return repo.save(txn);
+    }
+
+    // 🔥 DEBIT TRANSACTION
+    public Transaction debit(Account account, double amount) {
+
+        if (account == null)
+            throw new RuntimeException("Account cannot be null");
+
+        if (amount <= 0)
+            throw new RuntimeException("Invalid debit amount");
+
+        Transaction txn = new Transaction();
+        txn.setType("DEBIT");
+        txn.setAmount(amount);
+        txn.setDate(LocalDateTime.now());
+        txn.setAccount(account);
+
+        return repo.save(txn);
+    }
+
+    // 🔥 TRANSACTION HISTORY
+    public List<Transaction> getTransactions(Long accountId) {
+        return repo.findByAccountIdOrderByDateDesc(accountId);
+    }
+
+	public void save(Transaction transaction) {
+	repo.save(transaction);
+		
+	}
+}

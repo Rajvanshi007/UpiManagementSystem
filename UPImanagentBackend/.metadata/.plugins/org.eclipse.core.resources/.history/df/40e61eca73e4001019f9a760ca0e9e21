@@ -1,0 +1,31 @@
+package com.tcs.dto;
+
+
+public class TransferRequest {
+    private Long fromAccountId;
+  
+    private String toUsername;
+    private double amount;
+	public Long getFromAccountId() {
+		return fromAccountId;
+	}
+	public void setFromAccountId(Long fromAccountId) {
+		this.fromAccountId = fromAccountId;
+	}
+	
+	public String getToUsername() {
+		return toUsername;
+	}
+	public void setToUsername(String toUsername) {
+		this.toUsername = toUsername;
+	}
+	public double getAmount() {
+		return amount;
+	}
+	public void setAmount(double amount) {
+		this.amount = amount;
+	}
+    
+    
+    
+}

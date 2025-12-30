@@ -1,0 +1,29 @@
+package com.tcs.util;
+
+import javax.xml.crypto.Data;
+
+import org.springframework.stereotype.Component;
+
+@Component
+public class JwtUtil {
+
+    private static final String SECRET = "SUPER_SECRET_KEY_123456789";
+
+    public String generateToken(String username, String role) {
+        return Jwts.builder()
+                .setSubject(username)
+                .claim("role", role)
+                .setIssuedAt(new Data())
+                .setExpiration(new Date(System.currentTimeMillis() + 86400000))
+                .signWith(Keys.hmacShaKeyFor(SECRET.getBytes()), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public Claims extractClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(SECRET.getBytes())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+}

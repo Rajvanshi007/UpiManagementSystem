@@ -1,0 +1,132 @@
+package com.tcs.controller;
+
+import java.util.List;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import org.springframework.web.bind.annotation.*;
+
+import com.tcs.model.Account;
+import com.tcs.model.User;
+import com.tcs.service.AccountService;
+import com.tcs.service.UserService;
+import com.tcs.util.JwtUtil;
+
+@RestController
+@RequestMapping("/api/users")
+@CrossOrigin(origins = "http://localhost:4200")
+public class UserController {
+
+    private final UserService userService;
+    private final AccountService accountService;
+    private final JwtUtil jwtUtil;
+
+    public UserController(
+            UserService userService,
+            AccountService accountService,
+            JwtUtil jwtUtil
+    ) {
+        this.userService = userService;
+        this.accountService = accountService;
+        this.jwtUtil = jwtUtil;
+    }
+
+    // ================= SIGNUP =================
+    @PostMapping
+    public User createUser(@RequestBody User user) {
+
+        User savedUser = userService.saveUser(user);
+
+        Account savings = new Account();
+        savings.setType("SAVINGS");
+        savings.setBalance(0);
+        savings.setUser(savedUser);
+        accountService.saveAccount(savings);
+
+        Account checking = new Account();
+        checking.setType("CHECKING");
+        checking.setBalance(0);
+        checking.setUser(savedUser);
+        accountService.saveAccount(checking);
+
+        return savedUser;
+    }
+
+    // ================= USER LOGIN =================
+    @PostMapping("/login")
+    public Map<String, Object> login(@RequestBody User user) {
+
+        User loggedUser = userService
+                .login(user.getUsername(), user.getPassword())
+                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+
+        String token = jwtUtil.generateToken(loggedUser.getUsername(), "USER");
+
+        return Map.of(
+                "token", token,
+                "user", loggedUser,
+                "role", "USER"
+        );
+    }
+
+    // ================= ADMIN LOGIN =================
+    @PostMapping("/admin/login")
+    public Map<String, String> adminLogin(@RequestBody Map<String, String> body) {
+
+        if ("admin".equals(body.get("username"))
+                && "admin123".equals(body.get("password"))) {
+
+            String token = jwtUtil.generateToken("admin", "ADMIN");
+            return Map.of("token", token);
+        }
+
+        throw new RuntimeException("Invalid admin credentials");
+    }
+
+    // ================= GET ALL USERS (ADMIN ONLY) =================
+    @GetMapping
+    public List<User> getAllUsers(HttpServletRequest request) {
+
+        String role = (String) request.getAttribute("role");
+
+        if (!"ADMIN".equals(role)) {
+            throw new RuntimeException("Access Denied");
+        }
+
+        return userService.findAll();
+    }
+
+    // ================= GET USER BY ID =================
+    @GetMapping("/{id}")
+    public User getUser(
+            @PathVariable Long id,
+            HttpServletRequest request) {
+
+        User loggedUser = (User) request.getAttribute("loggedUser");
+        String role = (String) request.getAttribute("role");
+
+        // USER can access only himself
+        if ("USER".equals(role) && !loggedUser.getId().equals(id)) {
+            throw new RuntimeException("Access Denied");
+        }
+
+        return userService.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    // ================= DELETE USER (ADMIN ONLY) =================
+    @DeleteMapping("/{id}")
+    public void deleteUser(
+            @PathVariable Long id,
+            HttpServletRequest request) {
+
+        String role = (String) request.getAttribute("role");
+
+        if (!"ADMIN".equals(role)) {
+            throw new RuntimeException("Access Denied");
+        }
+
+        userService.deleteById(id);
+    }
+}

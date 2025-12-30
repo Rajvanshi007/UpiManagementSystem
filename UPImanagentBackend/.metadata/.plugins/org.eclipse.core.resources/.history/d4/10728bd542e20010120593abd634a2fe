@@ -1,0 +1,49 @@
+package com.tcs.config;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.tcs.model.User;
+import com.tcs.service.UserService;
+import com.tcs.util.JwtUtil;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.io.IOException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+@Component
+public class JwtFilter extends OncePerRequestFilter {
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private UserService userService;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain chain)
+            throws ServletException, IOException, java.io.IOException {
+
+        String auth = request.getHeader("Authorization");
+
+        if (auth != null && auth.startsWith("Bearer ")) {
+            String token = auth.substring(7);
+            Claims claims = jwtUtil.extractClaims(token);
+
+            User user = userService
+                    .findByUsername(claims.getSubject())
+                    .orElse(null);
+
+            request.setAttribute("loggedUser", user);
+            request.setAttribute("role", claims.get("role"));
+        }
+
+        chain.doFilter(request, response);
+    }
+}

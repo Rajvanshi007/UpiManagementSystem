@@ -1,0 +1,21 @@
+package com.tcs.service;
+
+
+import com.tcs.model.Transaction;
+import com.tcs.repository.TransactionRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class TransactionService {
+    private final TransactionRepository transactionRepository;
+
+    public Transaction saveTransaction(Transaction txn) {
+        return transactionRepository.save(txn);
+    }
+
+    public List<Transaction> getTransactionsByAccount(Long accountId) {
+        return transactionRepository.findByAccountIdOrderByDateDesc(accountId);
+    }
+}

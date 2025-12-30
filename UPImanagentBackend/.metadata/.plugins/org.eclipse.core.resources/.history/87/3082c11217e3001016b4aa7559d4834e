@@ -1,0 +1,47 @@
+package com.tcs.controller;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import com.tcs.model.Account;
+import com.tcs.model.User;
+import com.tcs.service.AccountService;
+import com.tcs.service.UserService;
+import com.tcs.util.JwtUtil;
+@RestController
+@RequestMapping("/api/users")
+@CrossOrigin(origins = "http://localhost:4200")
+public class UserController {
+
+	
+	@Autowired
+	UserService userService;
+	
+	
+	@Autowired
+	JwtUtil jwtUtil;
+	
+    @PostMapping("/login")
+    public Map<String, Object> login(@RequestBody User user) {
+        User loggedUser = userService
+                .login(user.getUsername(), user.getPassword())
+                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+
+        String token = jwtUtil.generateToken(loggedUser.getUsername(), "USER");
+
+        return Map.of("token", token, "user", loggedUser);
+    }
+
+    @PostMapping
+    public User signup(@RequestBody User user) {
+        return userService.saveUser(user);
+    }
+
+    @GetMapping
+    public List<User> getAllUsers() {
+        return userService.findAll();
+    }
+}

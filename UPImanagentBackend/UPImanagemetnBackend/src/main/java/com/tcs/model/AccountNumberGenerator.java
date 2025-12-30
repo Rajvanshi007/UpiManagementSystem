@@ -1,0 +1,23 @@
+package com.tcs.model;
+
+import java.security.SecureRandom;
+
+import org.springframework.stereotype.Component;
+
+@Component
+public class AccountNumberGenerator {
+
+    private static final String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+    public String generate() {
+        SecureRandom random = new SecureRandom();
+        StringBuilder sb = new StringBuilder("AC"); // prefix
+
+        for (int i = 0; i < 5; i++) {
+            sb.append(CHARS.charAt(random.nextInt(CHARS.length())));
+        }
+
+        return sb.toString(); // ex: AC8K4P2
+    }
+}
+

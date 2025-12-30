@@ -1,0 +1,116 @@
+package com.tcs.controller;
+
+import com.tcs.model.Account;
+import com.tcs.model.AddMoneyRequest;
+import com.tcs.model.Transaction;
+import com.tcs.model.TransferRequest;
+import com.tcs.model.User;
+import com.tcs.service.AccountService;
+import com.tcs.service.TransactionService;
+import com.tcs.service.UserService;
+
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/accounts")
+@CrossOrigin(origins = "http://localhost:4200")
+public class AccountController {
+
+    private final AccountService accountService;
+    private final TransactionService transactionService;
+    private final UserService userService;
+
+    public AccountController(
+            AccountService accountService,
+            UserService userService,
+            TransactionService transactionService
+    ) {
+        this.accountService = accountService;
+        this.userService = userService;
+        this.transactionService = transactionService;
+    }
+
+
+    // ✅ User Story 1: View accounts
+    @GetMapping("/user/{userId}")
+    public List<Account> getAccounts(@PathVariable Long userId) {
+        return accountService.getAccountsByUser(userId);
+    }
+
+    // ✅ REQUIRED: Create account (for data setup)
+    @PostMapping
+    public Account createAccount(@RequestBody Account account) {
+        return accountService.saveAccount(account);
+    }
+
+    @PostMapping("/add-money")
+    public Account addMoney1(@RequestBody AddMoneyRequest req) {
+
+        Account acc = accountService.getAccountById(req.getAccountId());
+
+        if (req.getAmount() <= 0)
+            throw new RuntimeException("Invalid amount");
+
+        acc.setBalance(acc.getBalance() + req.getAmount());
+        accountService.saveAccount(acc);
+
+        Transaction txn = new Transaction();
+        txn.setType("CREDIT");
+        txn.setAmount(req.getAmount());
+        txn.setDate(LocalDateTime.now());
+        txn.setAccount(acc);
+
+        transactionService.save(txn);
+
+        return acc;
+    }
+
+    @PostMapping("/transfer")
+    public void transfer(@RequestBody TransferRequest req) {
+
+        Account from = accountService.getAccountById(req.getFromAccountId());
+
+        User receiver = userService.findByUsername(req.getToUsername())
+                .orElseThrow(() -> new RuntimeException("Receiver not found"));
+
+
+        Account to = accountService.getAccountByUserAndType(
+                receiver.getId(),
+                req.getToAccountType()
+        );
+
+        if (req.getAmount() <= 0 || from.getBalance() < req.getAmount())
+            throw new RuntimeException("Invalid transfer");
+
+        // debit sender
+        from.setBalance(from.getBalance() - req.getAmount());
+        accountService.saveAccount(from);
+
+        // credit receiver
+        to.setBalance(to.getBalance() + req.getAmount());
+        accountService.saveAccount(to);
+
+        // transactions
+        Transaction debit = new Transaction();
+        debit.setType("DEBIT");
+        debit.setAmount(req.getAmount());
+        debit.setDate(LocalDateTime.now());
+        debit.setAccount(from);
+
+        Transaction credit = new Transaction();
+        credit.setType("CREDIT");
+        credit.setAmount(req.getAmount());
+        credit.setDate(LocalDateTime.now());
+        credit.setAccount(to);
+
+        transactionService.save(debit);
+        transactionService.save(credit);
+    }
+
+
+
+
+}

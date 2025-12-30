@@ -1,0 +1,15 @@
+package com.tcs.repository;
+
+
+
+import com.tcs.model.*;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+
+public interface UserRepository extends JpaRepository<User, Long> {
+    User findByUsername(String username);
+}
+
+
+
+

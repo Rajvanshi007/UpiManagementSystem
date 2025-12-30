@@ -1,0 +1,80 @@
+package com.tcs.controller;
+
+import com.tcs.dto.TransferRequest;
+import com.tcs.service.AccountService;
+import com.tcs.service.OtpService;
+import com.tcs.service.TransactionService;
+
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/otp")
+public class OtpController {
+
+    private final OtpService otpService;
+    private final AccountService accountService;
+    private final TransactionService transcationService;
+
+    public OtpController(OtpService otpService,AccountService accountService,
+    		TransactionService transcationService) {
+        this.otpService = otpService;
+        this.accountService=accountService;
+        this.transcationService=transcationService;
+    }
+
+    @PostMapping("/generate")
+    public void generate(@RequestBody Map<String, String> body) {
+        otpService.generateOtp(body.get("username"));
+    }
+}
+
+
+
+
+@PostMapping("/transfer")
+public void transfer(@RequestBody TransferRequest req) {
+
+    // 🔐 OTP CHECK
+    if (!otpService.validateOtp(req.getFromUsername(), req.getOtp())) {
+        throw new RuntimeException("Invalid or expired OTP");
+    }
+
+    Account from = accountService.getAccountById(req.getFromAccountId());
+
+    User receiver = userService.findByUsername(req.getToUsername())
+        .orElseThrow(() -> new RuntimeException("Receiver not found"));
+
+    // 🏦 Receiver SAVINGS account
+    Account to = accountService.getOrCreateSavingsAccount(receiver);
+
+    if (req.getAmount() <= 0)
+        throw new RuntimeException("Invalid amount");
+
+    if (from.getBalance() < req.getAmount())
+        throw new RuntimeException("Insufficient balance");
+
+    // DEBIT
+    from.setBalance(from.getBalance() - req.getAmount());
+    accountService.saveAccount(from);
+
+    // CREDIT
+    to.setBalance(to.getBalance() + req.getAmount());
+    accountService.saveAccount(to);
+
+    // TRANSACTION LOG
+    transactionService.save(
+        new Transaction("DEBIT", req.getAmount(), from)
+    );
+    transactionService.save(
+        new Transaction("CREDIT", req.getAmount(), to)
+    );
+}
+
+
+
+
+
+
+}

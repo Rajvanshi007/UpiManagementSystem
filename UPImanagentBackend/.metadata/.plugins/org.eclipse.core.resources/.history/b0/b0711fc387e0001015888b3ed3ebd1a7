@@ -1,0 +1,37 @@
+package com.tcs.controller;
+
+
+
+import com.tcs.model.Transaction;
+import com.tcs.service.TransactionService;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/transactions")
+public class TransactionController {
+	@Autowired
+	TransactionService transactionService;
+
+    @GetMapping("/account/{accountId}")
+    public List<Transaction> getTransactions(@PathVariable Long accountId) {
+        return transactionService.getTransactionsByAccount(accountId);
+    }
+
+    @PostMapping("/transfer")
+    public Transaction transfer(@RequestParam Long fromAccountId,
+                                @RequestParam Long toAccountId,
+                                @RequestParam double amount) {
+        // Simple transfer logic
+        Transaction txn = new Transaction();
+        txn.setAmount(amount);
+        txn.setType("DEBIT");
+        txn.setDate(LocalDateTime.now());
+        // Linking accounts skipped for brevity
+        return transactionService.saveTransaction(txn);
+    }
+}

@@ -1,0 +1,19 @@
+package com.tcs.repository;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.tcs.model.Account;
+import com.tcs.model.Transaction;
+
+public interface TransactionRepository extends JpaRepository<Transaction, Long> {
+
+List<Transaction> findByAccountIdOrderByDateDesc(Long accountId);
+List<Transaction> findByAccountUserId(Long userId);
+Optional<Account> findByAccount_AccountNumber(String accountNumber);
+
+
+}
+
