@@ -28,7 +28,15 @@ public class UserController {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
     }
+    @PostMapping
+    public User signup(@RequestBody User user) {
 
+        if (userService.existsByUsername(user.getUsername())) {
+            throw new RuntimeException("Username already exists");
+        }
+
+        return userService.save(user);
+    }
     // USER LOGIN
     @PostMapping("/login")
     public Map<String, Object> login(@RequestBody User user) {

@@ -47,6 +47,9 @@ public class UserService {
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
     }
+    public boolean existsByUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
 
     public void deleteById(Long id) {
         userRepository.deleteById(id);
@@ -55,4 +58,6 @@ public class UserService {
     public User save(User user) {
         return userRepository.save(user);
     }
+
+
 }

@@ -27,15 +27,13 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-
-        String path = request.getRequestURI();
+        String path = request.getServletPath();
         String method = request.getMethod();
 
-        return path.equals("/api/users/login")
-            || path.equals("/api/users/admin/login")
-            || (path.equals("/api/users") && method.equals("POST"));
+        return path.startsWith("/api/users/login")
+            || path.startsWith("/api/users/admin/login")
+            || (path.startsWith("/api/users") && method.equalsIgnoreCase("POST"));
     }
-
     @Override
     protected void doFilterInternal(
         HttpServletRequest request,
